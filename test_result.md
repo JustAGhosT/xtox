@@ -249,3 +249,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Implemented complete XToPDF application with LaTeX processing pipeline. Backend includes file upload, pdflatex conversion, error parsing, auto-fix, and PDF download. Frontend has drag-and-drop upload, auto-fix toggle, error display, and download functionality. Ready for comprehensive backend testing."
+  - agent: "testing"
+    message: "Completed comprehensive testing of all backend API endpoints. All endpoints are working correctly. The auto-fix functionality works when using query parameter (?auto_fix=true) but not when using form data. All other features including file upload, PDF conversion, error parsing, and PDF download are working as expected. Created backend_test.py with 10 test cases covering all required functionality."
