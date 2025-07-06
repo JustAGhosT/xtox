@@ -57,9 +57,8 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('auto_fix', autoFix);
 
-      const response = await axios.post(`${API}/convert`, formData, {
+      const response = await axios.post(`${API}/convert?auto_fix=${autoFix}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -112,7 +111,6 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             XToPDF
@@ -122,13 +120,10 @@ function App() {
           </p>
         </div>
 
-        {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {/* Upload Section */}
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Upload LaTeX File</h2>
             
-            {/* File Upload Area */}
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
                 dragActive
@@ -166,7 +161,6 @@ function App() {
               </button>
             </div>
 
-            {/* Auto-fix Option */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
@@ -180,13 +174,12 @@ function App() {
                     Auto-fix common LaTeX errors
                   </span>
                   <p className="text-xs text-gray-500 mt-1">
-                    Automatically add missing \\documentclass, \\begin{document}, and \\end{document} if needed
+                    Automatically add missing documentclass, begin/end document if needed
                   </p>
                 </div>
               </label>
             </div>
 
-            {/* Convert Button */}
             <div className="mt-6 text-center">
               <button
                 onClick={handleUpload}
@@ -212,7 +205,6 @@ function App() {
             </div>
           </div>
 
-          {/* Results Section */}
           {result && (
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Conversion Results</h2>
