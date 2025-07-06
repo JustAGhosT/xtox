@@ -102,7 +102,6 @@ This document has an error: \undefinedcommand
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        print(f"Error test response: {json.dumps(data, indent=2)}")
         
         # Check if errors were detected
         self.assertTrue(len(data['errors']) > 0)
