@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xtotext - AI-Ready Document Conversion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 30%, #2a1a4a 70%, #1a0a2a 100%);
+            color: #e8e8e8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #7c3aed, #f59e0b, #10b981);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 4s ease infinite;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+        }
+        
+        .logo::after {
+            content: '→ AI';
+            font-size: 1.5rem;
+            color: #00d4ff;
+            position: absolute;
+            top: 1rem;
+            right: calc(50% - 8rem);
+            animation: pulse 2s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        .tagline {
+            font-size: 1.4rem;
+            color: #a0a0a0;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: #00d4ff;
+            font-weight: normal;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00d4ff;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-top: 0.5rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .card:hover::before {
+            left: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+        
+        .card-title {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .card-description {
+            color: #c0c0c0;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-features {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .card-features li {
+            color: #a0a0a0;
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+        
+        .card-features li::before {
+            content: '▸';
+            color: #7c3aed;
+            position: absolute;
+            left: 0;
+        }
+        
+        .conversion-flow {
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+            text-align: center;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .flow-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .flow-title {
+            font-size: 1.2rem;
+            color: #c4b5fd;
+            margin-bottom: 0.5rem;
+        }
+        
+        .flow-desc {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        
+        .flow-arrow {
+            font-size: 2rem;
+            color: #7c3aed;
+            align-self: center;
+        }
+        
+        .code-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .code-block {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            font-family: 'Monaco', monospace;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .code-header {
+            color: #00d4ff;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+        
+        .code-content {
+            color: #e8e8e8;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            color: #f59e0b;
+        }
+        
+        .ai-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin: 3rem 0;
+        }
+        
+        .ai-tag {
+            background: linear-gradient(45deg, rgba(124, 58, 237, 0.2), rgba(0, 212, 255, 0.2));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            color: #c4b5fd;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ai-tag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .ai-tag:hover::before {
+            left: 100%;
+        }
+        
+        .ai-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 5rem 0;
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(124, 58, 237, 0.05));
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            position: relative;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00d4ff, #7c3aed, #f59e0b, #10b981);
+            border-radius: 20px;
+            z-index: -1;
+            animation: gradient 3s ease infinite;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #00d4ff, #7c3aed);
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+        
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .floating-element {
+            position: absolute;
+            opacity: 0.08;
+            animation: float 8s ease-in-out infinite;
+            font-size: 2rem;
+        }
+        
+        .floating-element:nth-child(1) {
+            top: 15%;
+            left: 8%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            top: 40%;
+            right: 12%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(3) {
+            bottom: 25%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+        
+        .floating-element:nth-child(4) {
+            top: 70%;
+            right: 20%;
+            animation-delay: 6s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(5deg); }
+            50% { transform: translateY(-25px) rotate(0deg); }
+            75% { transform: translateY(-10px) rotate(-5deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .logo { font-size: 2.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            .code-showcase { grid-template-columns: 1fr; }
+            .flow-steps { flex-direction: column; }
+            .hero-stats { gap: 1rem; }
+            .flow-arrow { transform: rotate(90deg); margin: 1rem 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element">📄</div>
+        <div class="floating-element">🤖</div>
+        <div class="floating-element">⚡</div>
+        <div class="floating-element">🔄</div>
+    </div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">xtotext</h1>
+            <p class="tagline">Transform Any Document Into AI-Ready Text</p>
+            <p class="subtitle">Optimized for LLMs • Built for AI Workflows • Repository-Scale Processing</p>
+            
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">15+</span>
+                    <span class="stat-label">Document Formats</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">99.9%</span>
+                    <span class="stat-label">AI Compatibility</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">10x</span>
+                    <span class="stat-label">Faster Processing</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="grid">
+            <div class="card">
+                <span class="card-icon">🔄</span>
+                <h3 class="card-title">Universal Conversion</h3>
+                <p class="card-description">Transform any document format into AI-optimized text with intelligent structure preservation.</p>
+                <ul class="card-features">
+                    <li>PDF, DOCX, LaTeX, Markdown support</li>
+                    <li>Smart context preservation</li>
+                    <li>Batch processing capabilities</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <span class="card-icon">🤖</span>
+                <h3 class="card-title">AI-First Design</h3>
+                <p class="card-description">Purpose-built for Large Language Models with token optimization and semantic structuring.</p>
+                <ul class="card-features">
+                    <li>LLM token optimization</li>
+                    <li>Context-aware chunking</li>
+                    <li>Relationship mapping</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <span class="card-icon">📦</span>
+                <h3 class="card-title">Repository Processing</h3>
+                <p class="card-description">Convert entire project documentation into single AI-consumable files, inspired by Repomix.</p>
+                <ul class="card-features">
+                    <li>Whole-project packaging</li>
+                    <li>Dependency tracking</li>
+                    <li>Git integration</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <span class="card-icon">⚡</span>
+                <h3 class="card-title">Lightning Performance</h3>
+                <p class="card-description">High-speed conversion with parallel processing and intelligent caching for enterprise workflows.</p>
+                <ul class="card-features">
+                    <li>Parallel processing</li>
+                    <li>Smart caching</li>
+                    <li>API-first architecture</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="conversion-flow">
+            <h2 style="color: #c4b5fd; margin-bottom: 2rem;">AI Conversion Pipeline</h2>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <span class="flow-icon">📁</span>
+                    <div class="flow-title">Upload</div>
+                    <div class="flow-desc">Documents or repositories</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-icon">🔍</span>
+                    <div class="flow-title">Analyze</div>
+                    <div class="flow-desc">Format detection & structure mapping</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-icon">⚙️</span>
+                    <div class="flow-title">Convert</div>
+                    <div class="flow-desc">AI-optimized text generation</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <span class="flow-icon">🤖</span>
+                    <div class="flow-title">AI-Ready</div>
+                    <div class="flow-desc">LLM-optimized output</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-showcase">
+            <div class="code-block">
+                <div class="code-header">Single Document Conversion</div>
+                <div class="code-content">
+<span class="highlight">POST</span> /api/ai/convert<br>
+{<br>
+&nbsp;&nbsp;"file": "document.pdf",<br>
+&nbsp;&nbsp;"target_model": <span class="highlight">"gpt-4"</span>,<br>
+&nbsp;&nbsp;"optimize_tokens": true<br>
+}<br><br>
+→ AI-ready structured text
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <div class="code-header">Repository Processing</div>
+                <div class="code-content">
+<span class="highlight">POST</span> /api/ai/repository<br>
+{<br>
+&nbsp;&nbsp;"path": "/project",<br>
+&nbsp;&nbsp;"include_code": true,<br>
+&nbsp;&nbsp;"format": <span class="highlight">"contextual"</span><br>
+}<br><br>
+→ Single AI-consumable file
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-features">
+            <span class="ai-tag">🎯 Token Optimization</span>
+            <span class="ai-tag">🔗 Context Preservation</span>
+            <span class="ai-tag">📊 Semantic Chunking</span>
+            <span class="ai-tag">🔄 Batch Processing</span>
+            <span class="ai-tag">📦 Repository Packaging</span>
+            <span class="ai-tag">🤖 LLM Integration</span>
+            <span class="ai-tag">⚡ Real-time API</span>
+            <span class="ai-tag">🔒 Enterprise Security</span>
+        </div>
+        
+        <div class="cta-section">
+            <h2 style="margin-bottom: 1rem; color: #00d4ff;">Ready to Transform Your AI Workflow?</h2>
+            <p style="margin-bottom: 2rem; color: #b0b0b0;">Join developers using xtotext to streamline their AI-powered document processing.</p>
+            <a href="#" class="cta-button">Start Converting</a>
+            <a href="#" class="cta-button">View API Docs</a>
+            <a href="#" class="cta-button">Try Repository Mode</a>
+        </div>
+    </div>
+</body>
+</html>

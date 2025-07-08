@@ -1,0 +1,537 @@
+// =============================================================================
+// XTOTEXT SCSS CONFIGURATION
+// AI-Ready Document Conversion System
+// =============================================================================
+
+// Import design tokens
+@import 'tokens';
+
+// =============================================================================
+// VARIABLES
+// =============================================================================
+
+// Colors
+$primary-50: #e6f9ff;
+$primary-100: #ccf3ff;
+$primary-200: #99e7ff;
+$primary-300: #66daff;
+$primary-400: #33ceff;
+$primary-500: #00d4ff;
+$primary-600: #00a3cc;
+$primary-700: #007a99;
+$primary-800: #005266;
+$primary-900: #002933;
+
+$secondary-50: #f3f0ff;
+$secondary-100: #e7e0ff;
+$secondary-200: #cfc1ff;
+$secondary-300: #b7a2ff;
+$secondary-400: #9f83ff;
+$secondary-500: #7c3aed;
+$secondary-600: #6d32d1;
+$secondary-700: #5e2ab5;
+$secondary-800: #4f2299;
+$secondary-900: #401a7d;
+
+$accent-amber-500: #f59e0b;
+$accent-emerald-500: #10b981;
+
+// Background Colors
+$bg-primary: #0a0a1a;
+$bg-secondary: #1a1a3a;
+$bg-tertiary: #2a1a4a;
+$bg-quaternary: #1a0a2a;
+$bg-card: rgba(255, 255, 255, 0.03);
+$bg-glass: rgba(255, 255, 255, 0.05);
+$bg-code: #1a1a2e;
+
+// Text Colors
+$text-primary: #e8e8e8;
+$text-secondary: #c0c0c0;
+$text-tertiary: #a0a0a0;
+$text-muted: #808080;
+$text-accent: #00d4ff;
+$text-purple: #c4b5fd;
+
+// Border Colors
+$border-primary: rgba(255, 255, 255, 0.1);
+$border-secondary: rgba(0, 212, 255, 0.2);
+$border-accent: rgba(124, 58, 237, 0.3);
+$border-glass: rgba(255, 255, 255, 0.08);
+
+// Typography
+$font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+$font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+$font-display: 'Space Grotesk', 'Inter', sans-serif;
+
+// Spacing
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 3rem;
+$spacing-3xl: 4rem;
+$spacing-4xl: 6rem;
+
+// Border Radius
+$radius-sm: 0.375rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+$radius-xl: 1rem;
+$radius-2xl: 1.5rem;
+$radius-3xl: 2rem;
+
+// Shadows
+$shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+$shadow-glow-lg: 0 0 40px rgba(0, 212, 255, 0.2);
+$shadow-purple-glow: 0 0 20px rgba(124, 58, 237, 0.3);
+$shadow-card: 0 15px 40px rgba(0, 212, 255, 0.15);
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-normal: 300ms ease;
+$transition-slow: 500ms ease;
+$transition-custom: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// =============================================================================
+// MIXINS
+// =============================================================================
+
+// Glass morphism effect
+@mixin glass-morphism($opacity: 0.03, $blur: 15px) {
+  background: rgba(255, 255, 255, $opacity);
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+}
+
+// Gradient text
+@mixin gradient-text($gradient) {
+  background: $gradient;
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Animated gradient
+@mixin animated-gradient($gradient) {
+  background: $gradient;
+  background-size: 300% 300%;
+  animation: gradient 4s ease infinite;
+}
+
+// Glow effect
+@mixin glow($color: $primary-500, $intensity: 0.3) {
+  box-shadow: 0 0 20px rgba($color, $intensity);
+}
+
+// Card hover effect
+@mixin card-hover {
+  transition: all $transition-custom;
+  
+  &:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: $border-secondary;
+    box-shadow: $shadow-card;
+  }
+}
+
+// Shimmer effect
+@mixin shimmer($color: rgba(255, 255, 255, 0.1)) {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, $color, transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+// Responsive breakpoints
+@mixin mobile {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: 1280px) {
+    @content;
+  }
+}
+
+// =============================================================================
+// BASE STYLES
+// =============================================================================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-mono;
+  background: linear-gradient(135deg, $bg-primary 0%, $bg-secondary 30%, $bg-tertiary 70%, $bg-quaternary 100%);
+  color: $text-primary;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+// =============================================================================
+// COMPONENT STYLES
+// =============================================================================
+
+// Logo
+.logo {
+  font-size: 4rem;
+  font-weight: bold;
+  @include gradient-text(linear-gradient(45deg, $primary-500, $secondary-500, $accent-amber-500, $accent-emerald-500));
+  @include animated-gradient(linear-gradient(45deg, $primary-500, $secondary-500, $accent-amber-500, $accent-emerald-500));
+  margin-bottom: $spacing-md;
+  letter-spacing: -2px;
+  position: relative;
+  
+  &::after {
+    content: '→ AI';
+    font-size: 1.5rem;
+    color: $primary-500;
+    position: absolute;
+    top: 1rem;
+    right: calc(50% - 8rem);
+    animation: pulse 2s ease infinite;
+  }
+  
+  @include mobile {
+    font-size: 2.5rem;
+    
+    &::after {
+      font-size: 1rem;
+      right: calc(50% - 6rem);
+    }
+  }
+}
+
+// Cards
+.card {
+  @include glass-morphism(0.03, 15px);
+  border: 1px solid $border-primary;
+  border-radius: $radius-2xl;
+  padding: 2.5rem;
+  @include card-hover;
+  @include shimmer;
+  position: relative;
+  
+  .card-icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-lg;
+    display: block;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+  
+  .card-title {
+    font-size: 1.6rem;
+    margin-bottom: $spacing-md;
+    color: $text-accent;
+    font-weight: bold;
+  }
+  
+  .card-description {
+    color: $text-secondary;
+    line-height: 1.7;
+    margin-bottom: $spacing-lg;
+  }
+  
+  .card-features {
+    list-style: none;
+    padding: 0;
+    
+    li {
+      color: $text-tertiary;
+      margin: 0.5rem 0;
+      padding-left: 1rem;
+      position: relative;
+      
+      &::before {
+        content: '▸';
+        color: $secondary-500;
+        position: absolute;
+        left: 0;
+      }
+    }
+  }
+}
+
+// Buttons
+.btn {
+  display: inline-block;
+  padding: 1.2rem 2.5rem;
+  text-decoration: none;
+  border-radius: $radius-lg;
+  font-weight: bold;
+  transition: all $transition-normal;
+  margin: $spacing-md;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  
+  @include shimmer(rgba(255, 255, 255, 0.2));
+  
+  &:hover {
+    transform: translateY(-3px);
+  }
+  
+  &--primary {
+    background: linear-gradient(45deg, $primary-500, $secondary-500);
+    color: white;
+    
+    &:hover {
+      @include glow($primary-500, 0.4);
+    }
+  }
+  
+  &--secondary {
+    background: linear-gradient(45deg, $secondary-500, $primary-500);
+    color: white;
+    
+    &:hover {
+      @include glow($secondary-500, 0.4);
+    }
+  }
+  
+  &--outline {
+    background: transparent;
+    border: 2px solid $primary-500;
+    color: $primary-500;
+    
+    &:hover {
+      background: $primary-500;
+      color: white;
+    }
+  }
+}
+
+// Code blocks
+.code-block {
+  background: $bg-code;
+  border: 1px solid $border-primary;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  font-family: $font-mono;
+  position: relative;
+  overflow-x: auto;
+  
+  .code-header {
+    color: $text-accent;
+    font-size: 0.9rem;
+    margin-bottom: $spacing-md;
+    font-weight: bold;
+  }
+  
+  .code-content {
+    color: $text-primary;
+    line-height: 1.5;
+  }
+  
+  .highlight {
+    color: $accent-amber-500;
+  }
+}
+
+// AI Tags
+.ai-tag {
+  background: linear-gradient(45deg, rgba($secondary-500, 0.2), rgba($primary-500, 0.2));
+  border: 1px solid rgba($secondary-500, 0.3);
+  color: $text-purple;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  transition: all $transition-normal;
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  margin: 0.25rem;
+  
+  @include shimmer(rgba(255, 255, 255, 0.1));
+  
+  &:hover {
+    transform: scale(1.05);
+    @include glow($secondary-500, 0.3);
+  }
+}
+
+// Floating elements
+.floating-elements {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  
+  .floating-element {
+    position: absolute;
+    opacity: 0.08;
+    animation: float 8s ease-in-out infinite;
+    font-size: 2rem;
+    
+    &:nth-child(1) {
+      top: 15%;
+      left: 8%;
+      animation-delay: 0s;
+    }
+    
+    &:nth-child(2) {
+      top: 40%;
+      right: 12%;
+      animation-delay: 2s;
+    }
+    
+    &:nth-child(3) {
+      bottom: 25%;
+      left: 15%;
+      animation-delay: 4s;
+    }
+    
+    &:nth-child(4) {
+      top: 70%;
+      right: 20%;
+      animation-delay: 6s;
+    }
+  }
+}
+
+// Grid layouts
+.grid {
+  display: grid;
+  gap: $spacing-xl;
+  
+  &--auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+  
+  &--2-col {
+    grid-template-columns: 1fr 1fr;
+    
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &--3-col {
+    grid-template-columns: repeat(3, 1fr);
+    
+    @include tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Utilities
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+.mb-xl { margin-bottom: $spacing-xl; }
+
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mt-xl { margin-top: $spacing-xl; }
+
+.p-sm { padding: $spacing-sm; }
+.p-md { padding: $spacing-md; }
+.p-lg { padding: $spacing-lg; }
+.p-xl { padding: $spacing-xl; }
+
+// =============================================================================
+// ANIMATIONS
+// =============================================================================
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-15px) rotate(5deg); }
+  50% { transform: translateY(-25px) rotate(0deg); }
+  75% { transform: translateY(-10px) rotate(-5deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+// Animation utilities
+.animate-fade-in { animation: fadeIn 0.6s ease-out; }
+.animate-slide-in-left { animation: slideInLeft 0.6s ease-out; }
+.animate-slide-in-right { animation: slideInRight 0.6s ease-out; }
+
+// Staggered animations
+.stagger-children > * {
+  animation: fadeIn 0.6s ease-out;
+  
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.1}s;
+    }
+  }
+}

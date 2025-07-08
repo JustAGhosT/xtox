@@ -1,0 +1,82 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/**/*.{js,jsx,ts,tsx}',
+    './public/index.html',
+    './components/**/*.{js,jsx,ts,tsx}',
+    './pages/**/*.{js,jsx,ts,tsx}',
+    './app/**/*.{js,jsx,ts,tsx}',
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      // Colors based on design tokens
+      colors: {
+        primary: {
+          50: '#e6f9ff',
+          100: '#ccf3ff',
+          200: '#99e7ff',
+          300: '#66daff',
+          400: '#33ceff',
+          500: '#00d4ff',
+          600: '#00a3cc',
+          700: '#007a99',
+          800: '#005266',
+          900: '#002933',
+          DEFAULT: '#00d4ff',
+        },
+        secondary: {
+          50: '#f3f0ff',
+          100: '#e7e0ff',
+          200: '#cfc1ff',
+          300: '#b7a2ff',
+          400: '#9f83ff',
+          500: '#7c3aed',
+          600: '#6d32d1',
+          700: '#5e2ab5',
+          800: '#4f2299',
+          900: '#401a7d',
+          DEFAULT: '#7c3aed',
+        },
+        accent: {
+          amber: {
+            50: '#fffbeb',
+            100: '#fef3c7',
+            200: '#fde68a',
+            300: '#fcd34d',
+            400: '#fbbf24',
+            500: '#f59e0b',
+            600: '#d97706',
+            700: '#b45309',
+            800: '#92400e',
+            900: '#78350f',
+            DEFAULT: '#f59e0b',
+          },
+          emerald: {
+            50: '#ecfdf5',
+            100: '#d1fae5',
+            200: '#a7f3d0',
+            300: '#6ee7b7',
+            400: '#34d399',
+            500: '#10b981',
+            600: '#059669',
+            700: '#047857',
+            800: '#065f46',
+            900: '#064e3b',
+            DEFAULT: '#10b981',
+          },
+        },
+        background: {
+          primary: '#0a0a1a',
+          secondary: '#1a1a3a',
+          tertiary: '#2a1a4a',
+          quaternary: '#1a0a2a',
+          card: 'rgba(255, 255, 255, 0.03)',
+          glass: 'rgba(255, 255, 255, 0.05)',
+          code: '#1a1a2e',
+        },
+        text: {
+          primary: '#e8e8e8',
+          secondary: '#c0c0c0',
+          tertiary: '#a0a0a0',
+          mute

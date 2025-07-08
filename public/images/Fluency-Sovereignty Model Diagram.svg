@@ -1,0 +1,163 @@
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Enhanced Gradients -->
+    <radialGradient id="manualGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:0.3" />
+    </radialGradient>
+    
+    <radialGradient id="hybridGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#3498db;stop-opacity:0.3" />
+    </radialGradient>
+    
+    <radialGradient id="autoGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:0.3" />
+    </radialGradient>
+    
+    <!-- Quadrant Gradients -->
+    <linearGradient id="q1Gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e8f5e8;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#c8e6c9;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="q2Gradient" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#ffcc02;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="q3Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffebee;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#ffcdd2;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="q4Gradient" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <!-- Arrow markers -->
+    <marker id="arrowhead" markerWidth="12" markerHeight="8" 
+     refX="11" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#2c3e50" />
+    </marker>
+    
+    <marker id="smallArrow" markerWidth="8" markerHeight="6" 
+     refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#34495e" />
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="900" height="700" fill="#fafbfc"/>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2c3e50">
+    Fluency–Sovereignty Model: Interactive Spectrum Analysis
+  </text>
+  <text x="450" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#7f8c8d">
+    Trust, Privacy, and Fairness Integration with Quadrant Analysis
+  </text>
+  
+  <!-- Quadrant Backgrounds -->
+  <!-- Q1: High Fluency, High Control (Optimal Zone) -->
+  <rect x="450" y="120" width="300" height="200" fill="url(#q1Gradient)" stroke="#27ae60" stroke-width="2" opacity="0.7" rx="10"/>
+  <!-- Q2: High Fluency, Low Control (Efficiency Zone) -->
+  <rect x="150" y="120" width="300" height="200" fill="url(#q2Gradient)" stroke="#f39c12" stroke-width="2" opacity="0.7" rx="10"/>
+  <!-- Q3: Low Fluency, Low Control (Risk Zone) -->
+  <rect x="150" y="320" width="300" height="200" fill="url(#q3Gradient)" stroke="#e74c3c" stroke-width="2" opacity="0.7" rx="10"/>
+  <!-- Q4: Low Fluency, High Control (Learning Zone) -->
+  <rect x="450" y="320" width="300" height="200" fill="url(#q4Gradient)" stroke="#3498db" stroke-width="2" opacity="0.7" rx="10"/>
+  
+  <!-- Main Axes -->
+  <!-- Horizontal: User Control -->
+  <line x1="120" y1="370" x2="780" y2="370" stroke="#2c3e50" stroke-width="4" marker-end="url(#arrowhead)"/>
+  <text x="800" y="375" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">User Control</text>
+  
+  <!-- Vertical: System Transparency/Fluency -->
+  <line x1="450" y1="550" x2="450" y2="90" stroke="#2c3e50" stroke-width="4" marker-end="url(#arrowhead)"/>
+  <text x="460" y="80" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">System Transparency</text>
+  <text x="340" y="80" font-family="Arial, sans-serif" font-size="12" fill="#2c3e50">(AI Fluency)</text>
+  
+  <!-- Quadrant Labels -->
+  <text x="600" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#27ae60">Q1: OPTIMAL ZONE</text>
+  <text x="600" y="158" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#27ae60">High Transparency + High Control</text>
+  
+  <text x="300" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#f39c12">Q2: EFFICIENCY ZONE</text>
+  <text x="300" y="158" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#f39c12">High Transparency + Low Control</text>
+  
+  <text x="300" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#e74c3c">Q3: RISK ZONE</text>
+  <text x="300" y="358" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#e74c3c">Low Transparency + Low Control</text>
+  
+  <text x="600" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#3498db">Q4: LEARNING ZONE</text>
+  <text x="600" y="358" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#3498db">Low Transparency + High Control</text>
+  
+  <!-- User State Positions -->
+  <!-- Manual (Q4 - Learning Zone) -->
+  <circle cx="600" cy="450" r="45" fill="url(#manualGradient)" stroke="#e74c3c" stroke-width="3"/>
+  <text x="600" y="445" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">MANUAL</text>
+  <text x="600" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fff">High Control</text>
+  
+  <!-- Hybrid (Q1 - Optimal Zone) -->
+  <circle cx="600" cy="220" r="50" fill="url(#hybridGradient)" stroke="#3498db" stroke-width="3"/>
+  <text x="600" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">HYBRID</text>
+  <text x="600" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fff">Balanced</text>
+  
+  <!-- Auto-Assist (Q2 - Efficiency Zone) -->
+  <circle cx="300" cy="220" r="45" fill="url(#autoGradient)" stroke="#9b59b6" stroke-width="3"/>
+  <text x="300" y="215" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#fff">AUTO-ASSIST</text>
+  <text x="300" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#fff">AI-Driven</text>
+  
+  <!-- Sovereignty Indicators with Better Positioning -->
+  <rect x="680" y="180" width="100" height="35" fill="#d5f4e6" stroke="#27ae60" stroke-width="2" rx="5"/>
+  <text x="730" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#27ae60">HIGH</text>
+  <text x="730" y="208" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#27ae60">SOVEREIGNTY</text>
+  
+  <rect x="200" y="400" width="100" height="35" fill="#ffeaea" stroke="#e74c3c" stroke-width="2" rx="5"/>
+  <text x="250" y="415" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#e74c3c">LOW</text>
+  <text x="250" y="428" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#e74c3c">SOVEREIGNTY</text>
+  
+  <!-- Trust, Privacy, Fairness Axes (Bottom Section) -->
+  <text x="450" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Integrated Assessment Dimensions</text>
+  
+  <!-- Trust Axis -->
+  <line x1="150" y1="610" x2="750" y2="610" stroke="#e74c3c" stroke-width="3" opacity="0.8"/>
+  <circle cx="150" cy="610" r="4" fill="#e74c3c"/>
+  <circle cx="450" cy="610" r="4" fill="#f39c12"/>
+  <circle cx="750" cy="610" r="4" fill="#27ae60"/>
+  <text x="100" y="615" font-family="Arial, sans-serif" font-size="12" fill="#e74c3c" font-weight="bold">TRUST</text>
+  <text x="150" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">Blind</text>
+  <text x="450" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f39c12">Appropriate</text>
+  <text x="750" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#27ae60">Justified</text>
+  
+  <!-- Privacy Axis -->
+  <line x1="150" y1="645" x2="750" y2="645" stroke="#3498db" stroke-width="3" opacity="0.8"/>
+  <circle cx="150" cy="645" r="4" fill="#e74c3c"/>
+  <circle cx="450" cy="645" r="4" fill="#f39c12"/>
+  <circle cx="750" cy="645" r="4" fill="#27ae60"/>
+  <text x="85" y="650" font-family="Arial, sans-serif" font-size="12" fill="#3498db" font-weight="bold">PRIVACY</text>
+  <text x="150" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">High Exposure</text>
+  <text x="450" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f39c12">Granular Control</text>
+  <text x="750" y="665" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#27ae60">User-Controlled</text>
+  
+  <!-- Fairness Axis -->
+  <line x1="150" y1="680" x2="750" y2="680" stroke="#9b59b6" stroke-width="3" opacity="0.8"/>
+  <circle cx="150" cy="680" r="4" fill="#e74c3c"/>
+  <circle cx="450" cy="680" r="4" fill="#f39c12"/>
+  <circle cx="750" cy="680" r="4" fill="#27ae60"/>
+  <text x="80" y="685" font-family="Arial, sans-serif" font-size="12" fill="#9b59b6" font-weight="bold">FAIRNESS</text>
+  <text x="150" y="700" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">Statistical Only</text>
+  <text x="450" y="700" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f39c12">Individual Agency</text>
+  <text x="750" y="700" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#27ae60">Contestable</text>
+  
+  <!-- Progression Arrows -->
+  <path d="M 555 450 Q 580 350 580 270" stroke="#34495e" stroke-width="2" fill="none" marker-end="url(#smallArrow)" stroke-dasharray="5,5"/>
+  <path d="M 345 220 Q 450 220 550 220" stroke="#34495e" stroke-width="2" fill="none" marker-end="url(#smallArrow)" stroke-dasharray="5,5"/>
+  
+  <!-- Axis Labels -->
+  <text x="120" y="385" font-family="Arial, sans-serif" font-size="11" fill="#2c3e50" transform="rotate(-90 120 385)">Low Control</text>
+  <text x="780" y="385" font-family="Arial, sans-serif" font-size="11" fill="#2c3e50" transform="rotate(-90 780 385)">High Control</text>
+  <text x="430" y="560" font-family="Arial, sans-serif" font-size="11" fill="#2c3e50">Low Transparency</text>
+  <text x="430" y="100" font-family="Arial, sans-serif" font-size="11" fill="#2c3e50">High Transparency</text>
+</svg>
