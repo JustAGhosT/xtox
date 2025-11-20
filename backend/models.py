@@ -1,9 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Union
-from datetime import datetime
+import re
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, validator
 
 # Request/Response Models
+
+
 class ConversionRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     filename: str
@@ -30,6 +34,8 @@ class StatusCheckCreate(BaseModel):
     client_name: str
 
 # Document storage models
+
+
 class Document(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     filename: str
@@ -52,3 +58,67 @@ class DocumentResponse(BaseModel):
 class PermissionUpdate(BaseModel):
     user_id: str
     permissions: List[str]
+
+# Audio conversion models
+
+
+class AudioConversionRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    target_format: str = 'mp3'
+    bitrate: str = '192k'
+    sample_rate: Optional[int] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    @validator('target_format')
+    def validate_target_format(cls, v):
+        """Validate target audio format."""
+        valid_formats = {'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'}
+        if v.lower() not in valid_formats:
+            formats_str = ', '.join(valid_formats)
+            raise ValueError(
+                f"Invalid target format. Must be one of: {formats_str}"
+            )
+        return v.lower()
+
+    @validator('bitrate')
+    def validate_bitrate(cls, v):
+        """Validate bitrate format."""
+        # Expected format: number followed by 'k'
+        if not re.match(r'^\d+k$', v.lower()):
+            raise ValueError(
+                "Bitrate must be in format 'XXXk' "
+                "(e.g., '128k', '192k', '320k')"
+            )
+        # Extract numeric value
+        bitrate_num = int(v.lower().rstrip('k'))
+        # Validate range (32k to 512k)
+        if bitrate_num < 32 or bitrate_num > 512:
+            raise ValueError("Bitrate must be between 32k and 512k")
+        return v.lower()
+
+    @validator('sample_rate')
+    def validate_sample_rate(cls, v):
+        """Validate sample rate if provided."""
+        if v is not None:
+            # Common sample rates
+            valid_rates = {8000, 11025, 16000, 22050, 44100, 48000, 96000}
+            if v not in valid_rates:
+                rates_str = ', '.join(map(str, sorted(valid_rates)))
+                raise ValueError(
+                    f"Sample rate must be one of: {rates_str}"
+                )
+        return v
+
+class AudioConversionResult(BaseModel):
+    id: str
+    filename: str
+    original_format: str
+    target_format: str
+    success: bool
+    errors: List[str] = []
+    warnings: List[str] = []
+    audio_path: Optional[str] = None
+    file_size_kb: Optional[float] = None
+    duration: Optional[float] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)

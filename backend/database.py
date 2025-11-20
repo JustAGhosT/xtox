@@ -1,24 +1,125 @@
+import logging
+import os
+
+from config import DB_NAME, MONGO_URL
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URL, DB_NAME
+
+logger = logging.getLogger(__name__)
 
 class Database:
+    """
+    Database connection manager with connection pooling.
+    
+    TODO: Production enhancements:
+    - Add connection health checks
+    - Implement connection retry logic with exponential backoff
+    - Add connection pool monitoring and metrics
+    - Implement read preference configuration for replica sets
+    - Add connection timeout configuration
+    """
     client = None
     db = None
 
     @classmethod
     async def connect(cls):
-        """Connect to MongoDB database"""
-        cls.client = AsyncIOMotorClient(MONGO_URL)
-        cls.db = cls.client[DB_NAME]
-        return cls.db
+        """
+        Connect to MongoDB database with connection pooling.
+
+        Connection pool configuration:
+        - maxPoolSize: Maximum number of connections (default: 100)
+        - minPoolSize: Minimum number of connections (default: 0)
+        - maxIdleTimeMS: Close connections after idle time
+        """
+        if cls.client is not None:
+            logger.warning("Database already connected")
+            return cls.db
+        
+        try:
+            # Get pool size from environment or use defaults
+            max_pool = int(os.environ.get('MONGODB_MAX_POOL_SIZE', 100))
+            min_pool = int(os.environ.get('MONGODB_MIN_POOL_SIZE', 0))
+            idle_time = int(os.environ.get('MONGODB_MAX_IDLE_TIME_MS', 0))
+            max_idle_time_ms = idle_time or None
+
+            # Create client with connection pooling
+            cls.client = AsyncIOMotorClient(
+                MONGO_URL,
+                maxPoolSize=max_pool,
+                minPoolSize=min_pool,
+                maxIdleTimeMS=max_idle_time_ms,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=10000,
+            )
+            
+            # Test connection
+            await cls.client.admin.command('ping')
+            
+            cls.db = cls.client[DB_NAME]
+            
+            # Create indexes for better performance
+            # TODO: Move index creation to migration script for production
+            await cls._create_indexes()
+            
+            logger.info(
+                f"Connected to MongoDB database '{DB_NAME}' "
+                f"(pool: {min_pool}-{max_pool} connections)"
+            )
+            return cls.db
+            
+        except Exception as e:
+            logger.error(f"Failed to connect to MongoDB: {e}", exc_info=True)
+            raise
+
+    @classmethod
+    async def _create_indexes(cls):
+        """Create database indexes for performance optimization.
+
+        Indexes are created automatically on startup.
+        """
+        try:
+            # Indexes for conversions collection
+            conversions = cls.db.conversions
+            await conversions.create_index("id", unique=True)
+            await conversions.create_index("timestamp")
+            # Descending for recent first
+            await conversions.create_index([("timestamp", -1)])
+
+            # Indexes for audio_conversions collection
+            audio_conversions = cls.db.audio_conversions
+            await audio_conversions.create_index("id", unique=True)
+            await audio_conversions.create_index("timestamp")
+            await audio_conversions.create_index([("timestamp", -1)])
+
+            # Indexes for documents collection
+            documents = cls.db.documents
+            await documents.create_index("id", unique=True)
+            await documents.create_index("uploaded_by")
+            await documents.create_index("timestamp")
+            await documents.create_index(
+                [("uploaded_by", 1), ("timestamp", -1)]
+            )
+            
+            logger.info("Database indexes created successfully")
+        except Exception as e:
+            logger.warning(f"Failed to create indexes (may already exist): {e}")
 
     @classmethod
     async def close(cls):
         """Close database connection"""
         if cls.client:
             cls.client.close()
+            cls.client = None
+            cls.db = None
+            logger.info("Database connection closed")
 
     @classmethod
     def get_db(cls):
-        """Get database instance"""
+        """Get database instance.
+
+        Raises RuntimeError if database is not connected.
+        """
+        if cls.db is None:
+            raise RuntimeError(
+                "Database not connected. Call Database.connect() first."
+            )
         return cls.db

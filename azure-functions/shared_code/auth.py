@@ -46,16 +46,23 @@ async def get_current_user_from_request(req: func.HttpRequest) -> User:
     # Get token from header
     auth_header = req.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
-        # For development/testing, check for a user_id query param
-        user_id = req.params.get('user_id')
-        if user_id and user_id.startswith('mock_'):
-            # Return mock user for development
-            return User(
-                id=user_id,
-                email=f"{user_id}@example.com",
-                name=f"Mock User ({user_id})",
-                roles=["user"]
-            )
+        # TODO: Production hardening - Remove mock authentication bypass
+        # Check if mock auth is explicitly enabled for development/testing only
+        allow_mock_auth = os.environ.get('ALLOW_MOCK_AUTH', 'false').lower() == 'true'
+        is_development = os.environ.get('ENVIRONMENT', 'development').lower() == 'development'
+        
+        if allow_mock_auth and is_development:
+            # Only allow mock auth in development with explicit flag
+            user_id = req.params.get('user_id')
+            if user_id and user_id.startswith('mock_'):
+                logging.warning(f"Mock authentication used for user: {user_id}. Disable in production!")
+                return User(
+                    id=user_id,
+                    email=f"{user_id}@example.com",
+                    name=f"Mock User ({user_id})",
+                    roles=["user"]
+                )
+        
         raise UnauthorizedError("No valid authentication token provided")
     
     # Extract token
@@ -92,10 +99,58 @@ async def get_current_user_from_request(req: func.HttpRequest) -> User:
 
 
 def get_auth_secret_key() -> str:
-    """Get the secret key for JWT signing/validation"""
-    # In a real app, this would come from environment variables or Azure Key Vault
-    # For development purposes, we use a hardcoded key
-    return "xtotext-development-secret-key-change-in-production"
+    """
+    Get the secret key for JWT signing/validation.
+    
+    Priority order:
+    1. Azure Key Vault secret (production)
+    2. Environment variable (development/staging)
+    3. Fallback error (prevents accidental deployment with insecure config)
+    
+    TODO: Production hardening required:
+    - Implement Azure Key Vault integration for production
+    - Add secret rotation mechanism
+    - Implement key versioning for zero-downtime rotation
+    - Add monitoring/alerting for secret access failures
+    """
+    import os
+    
+    # Try Azure Key Vault first (production)
+    # TODO: Uncomment and configure for production
+    # try:
+    #     from azure.keyvault.secrets import SecretClient
+    #     from azure.identity import DefaultAzureCredential
+    #     key_vault_url = os.environ.get('AZURE_KEY_VAULT_URL')
+    #     if key_vault_url:
+    #         credential = DefaultAzureCredential()
+    #         client = SecretClient(vault_url=key_vault_url, credential=credential)
+    #         secret = client.get_secret("JWT-SECRET-KEY")
+    #         return secret.value
+    # except Exception as e:
+    #     logging.warning(f"Failed to get secret from Key Vault: {e}")
+    
+    # Try environment variable (development/staging)
+    secret_key = os.environ.get('JWT_SECRET_KEY')
+    if secret_key:
+        if len(secret_key) < 32:
+            logging.warning("JWT_SECRET_KEY is too short. Use at least 32 characters for security.")
+        return secret_key
+    
+    # Fallback: Check if we're in development mode
+    is_development = os.environ.get('ENVIRONMENT', 'development').lower() == 'development'
+    if is_development:
+        logging.warning(
+            "Using development JWT secret. Set JWT_SECRET_KEY environment variable "
+            "or configure Azure Key Vault for production."
+        )
+        # TODO: Remove this fallback before production deployment
+        return "xtotext-development-secret-key-change-in-production"
+    
+    # Production: Fail securely if no secret configured
+    raise ValueError(
+        "JWT_SECRET_KEY not configured. Set JWT_SECRET_KEY environment variable "
+        "or configure Azure Key Vault (AZURE_KEY_VAULT_URL)."
+    )
 
 
 async def check_document_permission(

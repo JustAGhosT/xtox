@@ -1,28 +1,84 @@
-import React, { useState, useRef } from 'react';
-import './App.css';
-import axios from 'axios';
+/**
+ * Main App component for XToX Converter
+ *
+ * Provides LaTeX to PDF and Audio conversion functionality with
+ * full accessibility support, keyboard navigation, and responsive design.
+ *
+ * TODO: Production enhancements:
+ * - Add dark mode toggle
+ * - Implement conversion progress tracking
+ * - Add file preview before conversion
+ * - Support batch file uploads
+ * - Add conversion history view
+ */
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import React, { useState, useRef, useEffect } from 'react';
+import './App.css';
+import { conversionAPI } from './utils/apiClient';
+import { AccessibleFileUpload } from './components/AccessibleFileUpload';
+import { AccessibleAlert } from './components/AccessibleAlert';
+import { ProgressBar } from './components/ProgressBar';
 
 function App() {
+  const [activeTab, setActiveTab] = useState('latex');
+
+  // LaTeX conversion state
   const [selectedFile, setSelectedFile] = useState(null);
   const [autoFix, setAutoFix] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [latexError, setLatexError] = useState(null);
+  const [progress, setProgress] = useState(0);
   const fileInputRef = useRef(null);
 
-  const handleFileSelect = (file) => {
+  // Audio conversion state
+  const [selectedAudioFile, setSelectedAudioFile] = useState(null);
+  const [targetFormat, setTargetFormat] = useState('mp3');
+  const [bitrate, setBitrate] = useState('192k');
+  const [sampleRate, setSampleRate] = useState(null);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [audioResult, setAudioResult] = useState(null);
+  const [audioDragActive, setAudioDragActive] = useState(false);
+  const [audioError, setAudioError] = useState(null);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const audioFileInputRef = useRef(null);
+
+  // Keyboard navigation for tabs
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.key === 'ArrowLeft' && activeTab === 'audio') {
+        e.preventDefault();
+        setActiveTab('latex');
+      } else if (e.key === 'ArrowRight' && activeTab === 'latex') {
+        e.preventDefault();
+        setActiveTab('audio');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab]);
+
+  // LaTeX handlers
+  const handleFileSelect = (file, error) => {
+    if (error) {
+      setLatexError(error);
+      setSelectedFile(null);
+      return;
+    }
+
     if (file && file.name.endsWith('.tex')) {
       setSelectedFile(file);
       setResult(null);
+      setLatexError(null);
     } else {
-      alert('Please select a .tex file');
+      setLatexError('Please select a .tex file');
+      setSelectedFile(null);
     }
   };
 
-  const handleDrag = (e) => {
+  const handleDrag = e => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -32,48 +88,57 @@ function App() {
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = e => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFileInputChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelect(e.target.files[0]);
-    }
-  };
+  // File input change handler - handled by AccessibleFileUpload component
+  // Removed unused handler
 
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     setIsProcessing(true);
     setResult(null);
+    setLatexError(null);
+    setProgress(0);
+
+    // Simulate progress for better UX
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 500);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const response = await axios.post(`${API}/convert?auto_fix=${autoFix}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
+      const response = await conversionAPI.convertLaTeX(selectedFile, autoFix);
+      clearInterval(progressInterval);
+      setProgress(100);
       setResult(response.data);
     } catch (error) {
-      console.error('Error uploading file:', error);
+      clearInterval(progressInterval);
+      setProgress(0);
+      const errorMessage =
+        error.message || error.response?.data?.detail || 'Upload failed. Please try again.';
       setResult({
         success: false,
-        errors: [error.response?.data?.detail || 'Upload failed. Please try again.'],
-        warnings: []
+        errors: [errorMessage],
+        warnings: [],
       });
+      setLatexError(errorMessage);
     } finally {
       setIsProcessing(false);
+      setTimeout(() => setProgress(0), 1000);
     }
   };
 
@@ -81,10 +146,7 @@ function App() {
     if (!result || !result.success) return;
 
     try {
-      const response = await axios.get(`${API}/download/${result.id}`, {
-        responseType: 'blob',
-      });
-
+      const response = await conversionAPI.downloadPDF(result.id);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -94,8 +156,13 @@ function App() {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      const errorMessage = error.message || 'Failed to download PDF. Please try again.';
+      setLatexError(errorMessage);
+      setResult({
+        ...result,
+        success: false,
+        errors: [...(result.errors || []), errorMessage],
+      });
     }
   };
 
@@ -103,199 +170,608 @@ function App() {
     setSelectedFile(null);
     setResult(null);
     setAutoFix(false);
+    setLatexError(null);
+    setProgress(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  // Audio conversion handlers
+  const handleAudioFileSelect = (file, error) => {
+    if (error) {
+      setAudioError(error);
+      setSelectedAudioFile(null);
+      return;
+    }
+
+    const audioExtensions = ['.ogg', '.opus', '.mp3', '.wav', '.m4a', '.aac', '.flac'];
+    const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+    if (audioExtensions.includes(fileExt)) {
+      setSelectedAudioFile(file);
+      setAudioResult(null);
+      setAudioError(null);
+    } else {
+      setAudioError('Please select an audio file (.ogg, .opus, .mp3, .wav, .m4a, .aac, .flac)');
+      setSelectedAudioFile(null);
+    }
+  };
+
+  const handleAudioDrag = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setAudioDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setAudioDragActive(false);
+    }
+  };
+
+  const handleAudioDrop = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAudioDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleAudioFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  // Audio file input change handler - handled by AccessibleFileUpload component
+  // Removed unused handler
+
+  const handleAudioUpload = async () => {
+    if (!selectedAudioFile) return;
+
+    setIsProcessingAudio(true);
+    setAudioResult(null);
+    setAudioError(null);
+    setAudioProgress(0);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setAudioProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 500);
+
+    try {
+      const response = await conversionAPI.convertAudio(
+        selectedAudioFile,
+        targetFormat,
+        bitrate,
+        sampleRate
+      );
+      clearInterval(progressInterval);
+      setAudioProgress(100);
+      setAudioResult(response.data);
+    } catch (error) {
+      clearInterval(progressInterval);
+      setAudioProgress(0);
+      const errorMessage =
+        error.message || error.response?.data?.detail || 'Upload failed. Please try again.';
+      setAudioResult({
+        success: false,
+        errors: [errorMessage],
+        warnings: [],
+      });
+      setAudioError(errorMessage);
+    } finally {
+      setIsProcessingAudio(false);
+      setTimeout(() => setAudioProgress(0), 1000);
+    }
+  };
+
+  const handleAudioDownload = async () => {
+    if (!audioResult || !audioResult.success) return;
+
+    try {
+      const response = await conversionAPI.downloadAudio(audioResult.id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${audioResult.filename}.${audioResult.target_format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      const errorMessage = error.message || 'Failed to download audio. Please try again.';
+      setAudioError(errorMessage);
+      setAudioResult({
+        ...audioResult,
+        success: false,
+        errors: [...(audioResult.errors || []), errorMessage],
+      });
+    }
+  };
+
+  const resetAudioForm = () => {
+    setSelectedAudioFile(null);
+    setAudioResult(null);
+    setTargetFormat('mp3');
+    setBitrate('192k');
+    setSampleRate(null);
+    setAudioError(null);
+    setAudioProgress(0);
+    if (audioFileInputRef.current) {
+      audioFileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Skip to main content link for screen readers */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            XToPDF
-          </h1>
+        <header className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">XToX Converter</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Convert LaTeX files to PDF with intelligent error detection and auto-fix capabilities
+            Convert LaTeX files to PDF and WhatsApp audio files to other formats
           </p>
-        </div>
+        </header>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Upload LaTeX File</h2>
-            
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
-                dragActive
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <div className="mb-4">
-                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <p className="text-lg text-gray-600 mb-2">
-                {selectedFile ? selectedFile.name : 'Drop your .tex file here, or click to browse'}
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Maximum file size: 10MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".tex"
-                onChange={handleFileInputChange}
-              />
+        <main id="main-content" className="max-w-4xl mx-auto">
+          {/* Tab Navigation */}
+          <div
+            className="bg-white rounded-t-xl shadow-lg mb-0"
+            role="tablist"
+            aria-label="Conversion type selection"
+          >
+            <div className="flex border-b border-gray-200">
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
-              >
-                Choose File
-              </button>
-            </div>
-
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoFix}
-                  onChange={(e) => setAutoFix(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Auto-fix common LaTeX errors
-                  </span>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Automatically add missing documentclass, begin/end document if needed
-                  </p>
-                </div>
-              </label>
-            </div>
-
-            <div className="mt-6 text-center">
-              <button
-                onClick={handleUpload}
-                disabled={!selectedFile || isProcessing}
-                className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
-                  !selectedFile || isProcessing
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                role="tab"
+                aria-selected={activeTab === 'latex'}
+                aria-controls="latex-panel"
+                id="latex-tab"
+                onClick={() => setActiveTab('latex')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab('latex');
+                  }
+                }}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  activeTab === 'latex'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                {isProcessing ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Converting...
-                  </span>
-                ) : (
-                  'Convert to PDF'
-                )}
+                LaTeX to PDF
+              </button>
+              <button
+                role="tab"
+                aria-selected={activeTab === 'audio'}
+                aria-controls="audio-panel"
+                id="audio-tab"
+                onClick={() => setActiveTab('audio')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab('audio');
+                  }
+                }}
+                className={`flex-1 px-6 py-4 text-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  activeTab === 'audio'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Audio Converter
               </button>
             </div>
           </div>
 
-          {result && (
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Conversion Results</h2>
-              
-              {result.success ? (
-                <div className="text-center">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      Conversion Successful!
-                    </h3>
-                    {result.auto_fix_applied && (
-                      <p className="text-sm text-blue-600 mb-4">
-                        ✨ Auto-fix was applied to your LaTeX file
+          {/* LaTeX Conversion Tab */}
+          {activeTab === 'latex' && (
+            <div role="tabpanel" id="latex-panel" aria-labelledby="latex-tab">
+              <div className="bg-white rounded-b-xl shadow-lg p-4 sm:p-8 mb-8">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Upload LaTeX File</h2>
+
+                <AccessibleFileUpload
+                  accept=".tex"
+                  maxSize={10 * 1024 * 1024}
+                  onFileSelect={handleFileSelect}
+                  label={
+                    selectedFile
+                      ? selectedFile.name
+                      : 'Drop your .tex file here, or click to browse'
+                  }
+                  description="Maximum file size: 10MB"
+                  error={latexError}
+                  disabled={isProcessing}
+                  dragActive={dragActive}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                />
+
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoFix}
+                      onChange={e => setAutoFix(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      aria-label="Enable auto-fix for common LaTeX errors"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">
+                        Auto-fix common LaTeX errors
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Automatically add missing documentclass, begin/end document if needed
                       </p>
-                    )}
+                    </div>
+                  </label>
+                </div>
+
+                {isProcessing && (
+                  <div className="mt-6">
+                    <ProgressBar
+                      value={progress}
+                      label="Conversion Progress"
+                      ariaLabel="LaTeX to PDF conversion progress"
+                    />
                   </div>
-                  
+                )}
+
+                <div className="mt-6 text-center">
                   <button
-                    onClick={handleDownload}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl mr-4"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || isProcessing}
+                    aria-busy={isProcessing}
+                    aria-live="polite"
+                    className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      !selectedFile || isProcessing
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                    }`}
                   >
-                    Download PDF
-                  </button>
-                  
-                  <button
-                    onClick={resetForm}
-                    className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium text-lg"
-                  >
-                    Convert Another File
+                    {isProcessing ? (
+                      <span className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Converting...
+                      </span>
+                    ) : (
+                      'Convert to PDF'
+                    )}
                   </button>
                 </div>
-              ) : (
-                <div>
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
+              </div>
+
+              {result && (
+                <div
+                  className="bg-white rounded-xl shadow-lg p-4 sm:p-8 mt-8"
+                  role="region"
+                  aria-live="polite"
+                  aria-label="Conversion results"
+                >
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">Conversion Results</h2>
+
+                  {result.success ? (
+                    <div className="text-center">
+                      <AccessibleAlert
+                        type="success"
+                        title="Conversion Successful!"
+                        message={
+                          result.auto_fix_applied
+                            ? 'Auto-fix was applied to your LaTeX file'
+                            : undefined
+                        }
+                      />
+
+                      <div className="mt-6 button-group flex flex-col sm:flex-row justify-center gap-4">
+                        <button
+                          onClick={handleDownload}
+                          className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label="Download converted PDF file"
+                        >
+                          Download PDF
+                        </button>
+
+                        <button
+                          onClick={resetForm}
+                          className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium text-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          aria-label="Convert another LaTeX file"
+                        >
+                          Convert Another File
+                        </button>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      Conversion Failed
-                    </h3>
-                  </div>
-                  
-                  {result.errors && result.errors.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-lg font-medium text-red-600 mb-3">Errors:</h4>
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        {result.errors.map((error, index) => (
-                          <div key={index} className="text-sm text-red-700 mb-2 font-mono">
-                            {error}
-                          </div>
-                        ))}
+                  ) : (
+                    <div>
+                      <AccessibleAlert
+                        type="error"
+                        title="Conversion Failed"
+                        message="Please review the errors below and try again."
+                        items={result.errors || []}
+                      />
+
+                      {result.warnings && result.warnings.length > 0 && (
+                        <div className="mt-4">
+                          <AccessibleAlert
+                            type="warning"
+                            title="Warnings"
+                            items={result.warnings}
+                          />
+                        </div>
+                      )}
+
+                      <div className="text-center mt-6">
+                        <button
+                          onClick={resetForm}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label="Try LaTeX conversion again"
+                        >
+                          Try Again
+                        </button>
                       </div>
                     </div>
                   )}
-                  
-                  {result.warnings && result.warnings.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-lg font-medium text-yellow-600 mb-3">Warnings:</h4>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        {result.warnings.map((warning, index) => (
-                          <div key={index} className="text-sm text-yellow-700 mb-2 font-mono">
-                            {warning}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="text-center">
-                    <p className="text-gray-600 mb-4">
-                      Try enabling auto-fix or correct the errors above and upload again.
-                    </p>
-                    <button
-                      onClick={resetForm}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
-                    >
-                      Try Again
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
           )}
-        </div>
+
+          {/* Audio Conversion Tab */}
+          {activeTab === 'audio' && (
+            <div role="tabpanel" id="audio-panel" aria-labelledby="audio-tab">
+              <div className="bg-white rounded-b-xl shadow-lg p-4 sm:p-8">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Convert Audio File</h2>
+                <p className="text-sm text-gray-600 mb-6">
+                  Perfect for converting WhatsApp OGG Opus audio files to MP3, WAV, or other formats
+                </p>
+
+                <AccessibleFileUpload
+                  accept=".ogg,.opus,.mp3,.wav,.m4a,.aac,.flac"
+                  maxSize={50 * 1024 * 1024}
+                  onFileSelect={handleAudioFileSelect}
+                  label={
+                    selectedAudioFile
+                      ? selectedAudioFile.name
+                      : 'Drop your audio file here, or click to browse'
+                  }
+                  description="Supported: OGG, Opus, MP3, WAV, M4A, AAC, FLAC (Max: 50MB)"
+                  error={audioError}
+                  disabled={isProcessingAudio}
+                  dragActive={audioDragActive}
+                  onDragEnter={handleAudioDrag}
+                  onDragLeave={handleAudioDrag}
+                  onDragOver={handleAudioDrag}
+                  onDrop={handleAudioDrop}
+                />
+
+                {selectedAudioFile && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-800 mb-4">Conversion Settings</h3>
+
+                    <div className="mb-4">
+                      <label
+                        htmlFor="targetFormat"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Target Format
+                      </label>
+                      <select
+                        id="targetFormat"
+                        value={targetFormat}
+                        onChange={e => setTargetFormat(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                        aria-label="Select target audio format"
+                      >
+                        <option value="mp3">MP3</option>
+                        <option value="wav">WAV</option>
+                        <option value="ogg">OGG</option>
+                        <option value="m4a">M4A</option>
+                        <option value="aac">AAC</option>
+                        <option value="flac">FLAC</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label
+                        htmlFor="bitrate"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Bitrate
+                      </label>
+                      <select
+                        id="bitrate"
+                        value={bitrate}
+                        onChange={e => setBitrate(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                        aria-label="Select audio bitrate"
+                      >
+                        <option value="128k">128 kbps (Smaller file)</option>
+                        <option value="192k">192 kbps (Recommended)</option>
+                        <option value="256k">256 kbps (High quality)</option>
+                        <option value="320k">320 kbps (Best quality)</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label
+                        htmlFor="sampleRate"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Sample Rate (Optional)
+                      </label>
+                      <input
+                        id="sampleRate"
+                        type="number"
+                        value={sampleRate || ''}
+                        onChange={e =>
+                          setSampleRate(e.target.value ? parseInt(e.target.value) : null)
+                        }
+                        placeholder="e.g., 44100"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                        aria-label="Optional sample rate in Hz"
+                        min="8000"
+                        max="192000"
+                        step="1000"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Leave empty to use original sample rate
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {isProcessingAudio && (
+                  <div className="mt-6">
+                    <ProgressBar
+                      value={audioProgress}
+                      label="Audio Conversion Progress"
+                      ariaLabel="Audio conversion progress"
+                    />
+                  </div>
+                )}
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleAudioUpload}
+                    disabled={!selectedAudioFile || isProcessingAudio}
+                    aria-busy={isProcessingAudio}
+                    aria-live="polite"
+                    className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      !selectedAudioFile || isProcessingAudio
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {isProcessingAudio ? (
+                      <span className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Converting...
+                      </span>
+                    ) : (
+                      'Convert Audio'
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Audio Conversion Results */}
+              {audioResult && (
+                <div
+                  className="bg-white rounded-xl shadow-lg p-4 sm:p-8 mt-8"
+                  role="region"
+                  aria-live="polite"
+                  aria-label="Audio conversion results"
+                >
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">Conversion Results</h2>
+
+                  {audioResult.success ? (
+                    <div className="text-center">
+                      <AccessibleAlert
+                        type="success"
+                        title="Conversion Successful!"
+                        message={`Converted to ${audioResult.target_format.toUpperCase()}`}
+                      />
+
+                      {(audioResult.duration || audioResult.file_size_kb) && (
+                        <div className="mt-4 text-sm text-gray-600">
+                          {audioResult.duration && (
+                            <p>Duration: {Math.round(audioResult.duration)}s</p>
+                          )}
+                          {audioResult.file_size_kb && (
+                            <p>File size: {audioResult.file_size_kb.toFixed(2)} KB</p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-6 button-group flex flex-col sm:flex-row justify-center gap-4">
+                        <button
+                          onClick={handleAudioDownload}
+                          className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label={`Download converted ${audioResult.target_format.toUpperCase()} file`}
+                        >
+                          Download {audioResult.target_format.toUpperCase()}
+                        </button>
+
+                        <button
+                          onClick={resetAudioForm}
+                          className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium text-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          aria-label="Convert another audio file"
+                        >
+                          Convert Another File
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <AccessibleAlert
+                        type="error"
+                        title="Conversion Failed"
+                        message="Please review the errors below and try again."
+                        items={audioResult.errors || []}
+                      />
+
+                      <div className="text-center mt-6">
+                        <button
+                          onClick={resetAudioForm}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label="Try audio conversion again"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
