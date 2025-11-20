@@ -1,0 +1,28 @@
+# Core dependencies
+pathlib
+Pillow>=8.0.0
+python-docx>=0.8.11
+
+# Development dependencies
+pytest>=6.0
+pytest-cov
+black
+flake8
+mypy
+
+# Azure dependencies (optional)
+azure-functions
+azure-storage-blob
+azure-identity
+
+# API dependencies (optional)
+fastapi
+uvicorn
+pydantic
+
+# Audio conversion dependencies
+pydub>=0.25.1
+# Note: FFmpeg must be installed separately on the system
+# Windows: Download from https://ffmpeg.org/download.html
+# macOS: brew install ffmpeg
+# Linux: sudo apt-get install ffmpeg (or equivalent)
