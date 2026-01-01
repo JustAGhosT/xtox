@@ -51,6 +51,12 @@ eggs/
 lib/
 lib64/
 parts/
+
+# Allow lib/transcription but ignore its build artifacts
+!lib/transcription/
+lib/transcription/node_modules/
+lib/transcription/dist/
+lib/transcription/package-lock.json
 sdist/
 var/
 wheels/
