@@ -1,6 +1,6 @@
 # xtotext - AI-Ready Document Conversion System
 
-A powerful web-based application that transforms any document into AI-friendly text formats, designed for seamless integration with Large Language Models and AI workflows, with document storage and management capabilities.
+A powerful document conversion system that transforms any document into AI-friendly text formats, designed for seamless integration with Large Language Models and AI workflows, with document storage and management capabilities.
 
 ## Features
 
@@ -12,6 +12,43 @@ A powerful web-based application that transforms any document into AI-friendly t
 - **Repository Integration**: Batch convert entire project documentation into single AI-friendly files
 - **Smart Context Preservation**: Maintain document structure and relationships for better AI understanding
 - **API-First Design**: RESTful API designed for AI tool integration and automation workflows
+- **Proper Package Structure**: Follows Python packaging best practices
+- **Type Hints**: Full type annotation support
+- **CLI Interface**: Easy-to-use command-line tool
+- **Modular Design**: Separate core, utils, and workflow modules
+
+## Project Structure
+
+```
+xtox/
+├── xtox/                    # Main package
+│   ├── __init__.py         # Package initialization
+│   ├── core/               # Core conversion functionality
+│   │   ├── __init__.py
+│   │   ├── document_converter.py  # Main converter class
+│   │   ├── markdown_to_latex.py   # Markdown to LaTeX conversion
+│   │   └── latex_to_pdf.py        # LaTeX to PDF conversion
+│   ├── utils/              # Utility functions
+│   │   ├── __init__.py
+│   │   └── image_handler.py
+│   ├── workflows/          # High-level workflows
+│   │   ├── __init__.py
+│   │   └── md_to_pdf.py
+│   ├── cli/                # Command-line interface
+│   │   ├── __init__.py
+│   │   └── main.py
+│   ├── api/                # API routes
+│   ├── backend/            # Backend services
+│   ├── azure-functions/    # Azure Functions
+│   └── frontend/           # React frontend
+├── tests/                  # Test files
+├── infra/                  # Infrastructure code
+├── setup.py               # Package setup
+├── pyproject.toml         # Modern Python project config
+├── requirements.txt       # Dependencies
+├── Makefile              # Development tasks
+└── README.md             # This file
+```
 
 ## Architecture
 
@@ -26,81 +63,78 @@ This project consists of:
 
 ## Prerequisites
 
-- Azure subscription
+- Azure subscription (for cloud deployment)
 - Azure CLI or PowerShell Az module
 - Node.js 14+
 - MongoDB
-- Python 3.9+ (for development)
+- Python 3.9+
 - AI conversion dependencies (transformers, tiktoken, etc.)
 
-## AI-Optimized Features
+## Installation
 
-### Smart Text Structuring
-- **Context Headers**: Automatic insertion of document context and metadata
-- **Token Optimization**: Text chunking optimized for LLM token limits
-- **Relationship Mapping**: Preserve cross-document references and dependencies
-- **Semantic Sectioning**: Intelligent document section identification
-
-### Repository-Wide Conversion
-- **Project Packaging**: Convert entire documentation sets into single AI-consumable files
-- **Dependency Mapping**: Track and include related documents automatically  
-- **Code-Documentation Linking**: Connect code files with their documentation
-- **Version Tracking**: Maintain conversion history for iterative AI workflows
-
-## Supported Formats
-
-### Input Formats
-- PDF documents → AI-structured text
-- Microsoft Word (DOCX) → Formatted AI input
-- LaTeX files → Mathematical content preserved
-- Markdown → Enhanced structure for AI
-- HTML → Clean text with link preservation
-- Code repositories → Documentation + code context
-- Technical diagrams → OCR + description extraction
-
-### Output Formats
-- **PDF**: Generated from LaTeX and other document types
-- **AI-Text**: Clean, structured text for general LLM use
-- **DOCX**: Microsoft Word format
-- **Markdown**: Structured MD files
-- **Contextual Format**: Text with preserved document relationships
-- **Token-Optimized**: Chunked output respecting model token limits
-- **Semantic JSON**: Structured data format for specialized AI tools
-- **Repository Summary**: Single-file representation of entire projects
-
-## Deployment
-
-### Quick Start with PowerShell
-
-1. Clone the repository
-2. Navigate to the deployment directory
-3. Run the AI-optimized deployment script:
-
-```powershell
-./deploy.ps1 -resourceGroupName "myResourceGroup" -location "eastus" -storageAccountName "mystorageacct" -enableAIOptimization $true
-```
-
-### Environment Configuration
+### Development Installation
 
 ```bash
-# Azure Configuration
-AZURE_STORAGE_ACCOUNT_NAME=your_storage_account
-AZURE_STORAGE_ACCOUNT_KEY=your_storage_key
-AZURE_FUNCTION_APP_NAME=your_function_app_name
+# Clone the repository
+git clone <repository-url>
+cd xtox
 
-# MongoDB Configuration  
-MONGODB_CONNECTION_STRING=mongodb://localhost:27017/xtotext
+# Install in development mode with all dependencies
+make setup
 
-# AI Optimization Settings
-ENABLE_TOKEN_OPTIMIZATION=true
-MAX_TOKENS_PER_CHUNK=4000
-PRESERVE_CODE_CONTEXT=true
-AI_MODEL_TARGET=gpt-4  # or claude-3, etc.
+# Or manually:
+pip install -e ".[dev,azure,api]"
+```
 
-# Repository Processing
-BATCH_SIZE=50
-INCLUDE_HIDDEN_FILES=false
-RESPECT_GITIGNORE=true
+### Production Installation
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+### Command Line Interface
+
+```bash
+# Convert Markdown to PDF
+xtotext input.md -o output_dir -r 2
+
+# Convert LaTeX to PDF
+xtotext document.tex -o output_dir
+
+# Show help
+xtotext --help
+```
+
+### Python API
+
+```python
+from xtox.core import DocumentConverter
+
+# Initialize converter
+converter = DocumentConverter(output_dir="./output")
+
+# Convert Markdown to PDF
+result = converter.markdown_to_pdf(
+    "document.md", 
+    refinement_level=2
+)
+
+# Convert LaTeX to PDF
+pdf_path = converter.latex_to_pdf("document.tex")
+```
+
+### Using Workflows
+
+```python
+from xtox.workflows import process_markdown_to_pdf
+
+result = process_markdown_to_pdf(
+    "document.md",
+    output_dir="./output",
+    refinement_level=1
+)
 ```
 
 ## API Endpoints
@@ -165,23 +199,53 @@ response = requests.post(
 project_context = response.json()['consolidated_text']
 ```
 
-### LaTeX to PDF Conversion
-```python
-import requests
+## Development
 
-# Convert LaTeX file to PDF
-with open('document.tex', 'rb') as f:
-    response = requests.post(
-        'https://yourfunctionapp.azurewebsites.net/api/convert',
-        files={'file': f},
-        params={'auto_fix': 'true'},
-        headers={'Authorization': 'Bearer your_token'}
-    )
-    
-    # Get conversion result with download link
-    conversion_id = response.json()['id']
-    pdf_url = f'https://yourfunctionapp.azurewebsites.net/api/download/{conversion_id}'
+### Setup Development Environment
+
+```bash
+make dev-install
 ```
+
+### Run Tests
+
+```bash
+make test
+make test-cov  # with coverage
+```
+
+### Code Quality
+
+```bash
+make lint      # Run linting
+make format    # Format code
+```
+
+### Build Package
+
+```bash
+make build
+```
+
+### Local Setup with Azure Functions Core Tools
+1. **Install Azure Functions Core Tools**:
+   ```bash
+   npm install -g azure-functions-core-tools@4
+   ```
+
+2. **Run Functions locally**:
+   ```bash
+   cd azure-functions
+   func start
+   ```
+
+3. **AI Model Integration**:
+   ```bash
+   # Install AI optimization tools
+   pip install tiktoken transformers sentence-transformers
+   # Configure model-specific tokenizers
+   python scripts/setup_ai_models.py
+   ```
 
 ## AI Integration Features
 
@@ -225,51 +289,55 @@ repository_processing:
     include_git_info: false
 ```
 
-## Development
+## Recent Improvements
 
-### Local Setup with Azure Functions Core Tools
-1. **Install Azure Functions Core Tools**:
-   ```bash
-   npm install -g azure-functions-core-tools@4
-   ```
+### Security Enhancements
+- ✅ JWT secret key management via environment variables and Azure Key Vault
+- ✅ Removed mock authentication bypass
+- ✅ CORS origin restrictions
+- ✅ File path sanitization to prevent path traversal attacks
+- ✅ Input validation for all endpoints
 
-2. **Run Functions locally**:
-   ```bash
-   cd azure-functions
-   func start
-   ```
+### Performance Optimizations
+- ✅ Database connection pooling
+- ✅ Rate limiting middleware
+- ✅ Database indexes for faster queries
+- ✅ Centralized file validation
 
-3. **AI Model Integration**:
-   ```bash
-   # Install AI optimization tools
-   pip install tiktoken transformers sentence-transformers
-   # Configure model-specific tokenizers
-   python scripts/setup_ai_models.py
-   ```
-
-## Monitoring AI Performance
-- **Token Usage Tracking**: Monitor token consumption per conversion
-- **Model Performance**: Track conversion quality metrics
-- **AI Workflow Analytics**: Measure integration success rates
-- **Context Preservation**: Validate relationship maintenance
-- **Azure Application Insights**: Monitor function performance and errors
-
-## AI Use Cases
-- **Documentation Analysis**: Convert technical documentation for AI-powered Q&A systems
-- **Code Understanding**: Transform codebases into AI-readable formats for analysis
-- **Research and Analysis**: Convert academic papers for AI-powered research assistance
+### UI/UX Improvements
+- ✅ Accessibility components (ARIA labels, keyboard navigation)
+- ✅ Design token integration
+- ✅ Responsive design support
+- ✅ Error handling improvements
 
 ## Contributing
+
 1. Fork the repository
 2. Create a feature branch focused on AI optimization
 3. Add tests for AI-specific functionality
 4. Ensure compatibility with major LLM providers
 5. Submit a pull request
 
-## License
-MIT License - see LICENSE file for details
+## Documentation
 
-## Support
-- AI Integration Guide: [docs.xtotext.com/ai-integration](https://docs.xtotext.com/ai-integration)
-- LLM Compatibility: [docs.xtotext.com/llm-support](https://docs.xtotext.com/llm-support)
-- Issues: [GitHub Issues](https://github.com/your-org/xtotext/issues)
+- [API Documentation](docs/API.md) - Complete API reference
+- [Architecture](docs/ARCHITECTURE.md) - System architecture and design
+- [Deployment Guide](docs/DEPLOYMENT.md) - Deployment instructions
+- [Contributing](docs/CONTRIBUTING.md) - Contribution guidelines
+- [Testing Guide](docs/TESTING.md) - Testing documentation
+- [Design System](docs/DESIGN_SYSTEM.md) - Design tokens and components
+
+## Environment Variables
+
+See [.env.example](.env.example) for all configuration options.
+
+**Required for Production:**
+- `JWT_SECRET_KEY` - Minimum 32 characters
+- `MONGO_URL` - MongoDB connection string
+- `ALLOWED_ORIGINS` - Comma-separated frontend URLs
+- `ENVIRONMENT` - Set to `production`
+- `ALLOW_MOCK_AUTH` - Set to `false`
+
+## License
+
+MIT License - see LICENSE file for details
