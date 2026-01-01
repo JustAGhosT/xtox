@@ -1,5 +1,9 @@
+"""
+Configuration module for XToX Converter backend.
+"""
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -15,8 +19,23 @@ TEMP_DIR = Path("/tmp/xtopdf")
 DOC_STORAGE_DIR = Path("/tmp/document_storage")
 
 # Application settings
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-LATEX_TIMEOUT = 30  # seconds
+# File size limits
+MAX_FILE_SIZE = int(os.environ.get('MAX_FILE_SIZE', 10 * 1024 * 1024))  # 10MB default
+MAX_AUDIO_FILE_SIZE = int(os.environ.get('MAX_AUDIO_FILE_SIZE', 50 * 1024 * 1024))  # 50MB default
+
+# Timeouts
+LATEX_TIMEOUT = int(os.environ.get('LATEX_TIMEOUT', 30))  # seconds
+AUDIO_CONVERSION_TIMEOUT = int(os.environ.get('AUDIO_CONVERSION_TIMEOUT', 300))  # 5 minutes
+
+# Rate limiting
+RATE_LIMIT_ENABLED = os.environ.get('RATE_LIMIT_ENABLED', 'true').lower() == 'true'
+RATE_LIMIT_REQUESTS = int(os.environ.get('RATE_LIMIT_REQUESTS', 100))  # requests per window
+RATE_LIMIT_WINDOW = int(os.environ.get('RATE_LIMIT_WINDOW', 60))  # seconds
+
+# Caching
+CACHE_ENABLED = os.environ.get('CACHE_ENABLED', 'false').lower() == 'true'
+CACHE_TTL = int(os.environ.get('CACHE_TTL', 3600))  # seconds
+REDIS_URL = os.environ.get('REDIS_URL')
 
 # Create necessary directories
 TEMP_DIR.mkdir(exist_ok=True)

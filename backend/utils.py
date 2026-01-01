@@ -1,3 +1,6 @@
+"""
+Utility functions for LaTeX processing and error handling.
+"""
 from typing import List, Tuple
 
 def parse_latex_errors(log_content: str) -> Tuple[List[str], List[str]]:

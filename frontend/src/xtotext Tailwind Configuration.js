@@ -79,4 +79,10 @@ module.exports = {
           primary: '#e8e8e8',
           secondary: '#c0c0c0',
           tertiary: '#a0a0a0',
-          mute
+          muted: '#808080',
+        },
+      },
+    },
+  },
+  plugins: [],
+};

@@ -4,6 +4,21 @@ import os
 import re
 
 
+def check_pdflatex_installed():
+    """Check if pdflatex is installed and available."""
+    try:
+        result = subprocess.run(
+            ["pdflatex", "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',
+            errors='replace'
+        )
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
+
 def check_latex_structure(tex_path):
     """
     Check if the LaTeX file has the required structure.

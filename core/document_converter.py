@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from .markdown_to_latex import convert_markdown_to_latex
+from .markdown_to_docx import convert_markdown_to_docx
+from .markdown_to_html import convert_markdown_to_html
+from .html_to_markdown import convert_html_to_markdown
 from .latex_to_pdf import latex_to_pdf, fix_latex_structure
 from ..utils.image_handler import copy_images_to_output_dir, update_image_paths
 
@@ -123,3 +126,140 @@ class DocumentConverter:
             raise RuntimeError(f"PDF generation failed: {pdf_path}")
         
         return str(pdf_path)
+    
+    def markdown_to_docx(
+        self, 
+        markdown_path: Union[str, Path], 
+        output_dir: Optional[str] = None
+    ) -> str:
+        """
+        Convert Markdown file to DOCX.
+        
+        Args:
+            markdown_path: Path to the markdown file
+            output_dir: Output directory (overrides default)
+            
+        Returns:
+            Path to generated DOCX file
+        """
+        markdown_path = Path(markdown_path)
+        if not markdown_path.exists():
+            raise FileNotFoundError(f"Markdown file not found: {markdown_path}")
+        
+        # Determine output directory
+        if output_dir:
+            output_path = Path(output_dir)
+        elif self.output_dir:
+            output_path = self.output_dir
+        else:
+            output_path = markdown_path.parent
+        
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Generate file path
+        base_name = markdown_path.stem
+        docx_path = output_path / f"{base_name}.docx"
+        
+        # Read markdown content
+        with open(markdown_path, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
+        
+        # Convert to DOCX
+        convert_markdown_to_docx(markdown_content, str(docx_path))
+        
+        if not docx_path.exists():
+            raise RuntimeError(f"DOCX generation failed: {docx_path}")
+        
+        return str(docx_path)
+    
+    def markdown_to_html(
+        self, 
+        markdown_path: Union[str, Path], 
+        output_dir: Optional[str] = None,
+        include_css: bool = True
+    ) -> str:
+        """
+        Convert Markdown file to HTML.
+        
+        Args:
+            markdown_path: Path to the markdown file
+            output_dir: Output directory (overrides default)
+            include_css: Whether to include CSS styling
+            
+        Returns:
+            Path to generated HTML file
+        """
+        markdown_path = Path(markdown_path)
+        if not markdown_path.exists():
+            raise FileNotFoundError(f"Markdown file not found: {markdown_path}")
+        
+        # Determine output directory
+        if output_dir:
+            output_path = Path(output_dir)
+        elif self.output_dir:
+            output_path = self.output_dir
+        else:
+            output_path = markdown_path.parent
+        
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Generate file path
+        base_name = markdown_path.stem
+        html_path = output_path / f"{base_name}.html"
+        
+        # Read markdown content
+        with open(markdown_path, 'r', encoding='utf-8') as f:
+            markdown_content = f.read()
+        
+        # Convert to HTML
+        convert_markdown_to_html(markdown_content, str(html_path), include_css)
+        
+        if not html_path.exists():
+            raise RuntimeError(f"HTML generation failed: {html_path}")
+        
+        return str(html_path)
+    
+    def html_to_markdown(
+        self, 
+        html_path: Union[str, Path], 
+        output_dir: Optional[str] = None
+    ) -> str:
+        """
+        Convert HTML file to Markdown.
+        
+        Args:
+            html_path: Path to the HTML file
+            output_dir: Output directory (overrides default)
+            
+        Returns:
+            Path to generated Markdown file
+        """
+        html_path = Path(html_path)
+        if not html_path.exists():
+            raise FileNotFoundError(f"HTML file not found: {html_path}")
+        
+        # Determine output directory
+        if output_dir:
+            output_path = Path(output_dir)
+        elif self.output_dir:
+            output_path = self.output_dir
+        else:
+            output_path = html_path.parent
+        
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Generate file path
+        base_name = html_path.stem
+        md_path = output_path / f"{base_name}.md"
+        
+        # Read HTML content
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Convert to Markdown
+        convert_html_to_markdown(html_content, str(md_path))
+        
+        if not md_path.exists():
+            raise RuntimeError(f"Markdown generation failed: {md_path}")
+        
+        return str(md_path)
